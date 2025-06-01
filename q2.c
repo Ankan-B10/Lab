@@ -1,7 +1,7 @@
 // To sending msg to the msg queue
 #include <sys/types.h> 
 #include <sys/ipc.h>
-#include <sys/img.n
+#include <sys/msg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
