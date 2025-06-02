@@ -6,41 +6,53 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-
 int main() {
-    int sockfd, result;
-    struct sockaddr_in address;
-    char ch1[200], ch2[200];
+    int s_sd, c_sd;
+    struct sockaddr_in serv, cli;
+    char recv_msg[200], send_msg[200];
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
+    s_sd = socket(AF_INET, SOCK_STREAM, 0);
+    if (s_sd < 0) {
         perror("Socket creation failed");
         exit(1);
     }
 
-    address.sin_family = AF_INET;
-    address.sin_port = htons(8080);
-    address.sin_addr.s_addr = inet_addr("127.0.0.1");
-    socklen_t len = sizeof(address);
+    serv.sin_family = AF_INET;
+    serv.sin_port = htons(8080);
+    serv.sin_addr.s_addr = inet_addr("127.0.0.1");
+    socklen_t serv_len = sizeof(serv);
 
-    result = connect(sockfd, (struct sockaddr *)&address, len);
-    if (result == -1) {
-        perror("Connection failed");
+    if (bind(s_sd, (struct sockaddr *)&serv, serv_len) < 0) {
+        perror("Bind failed");
         exit(1);
     }
 
-    printf("Connected to server.\n");
-
-    while (1) {
-        printf("\nEnter message to server: ");
-        scanf(" %[^\n]", ch1);
-
-        write(sockfd, ch1, sizeof(ch1));
-        read(sockfd, ch2, sizeof(ch2));
-
-        printf("Message from server: %s\n", ch2);
+    if (listen(s_sd, 5) < 0) {
+        perror("Listen failed");
+        exit(1);
     }
 
-    close(sockfd);
+    printf("Server is waiting for connections...\n");
+    socklen_t cli_len = sizeof(cli);
+    c_sd = accept(s_sd, (struct sockaddr *)&cli, &cli_len);
+    if (c_sd < 0) {
+        perror("Accept failed");
+        exit(1);
+    }
+
+    while (1) {
+        read(c_sd, recv_msg, sizeof(recv_msg));
+        printf("\nMessage from client: %s\n", recv_msg);
+
+        printf("Enter message for client: ");
+        scanf(" %[^\n]", send_msg);
+
+        write(c_sd, send_msg, sizeof(send_msg));
+    }
+
+    close(c_sd);
+    close(s_sd);
+    return 0;
+}
     return 0;
 }
